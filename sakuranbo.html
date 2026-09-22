@@ -230,22 +230,31 @@
     }
   }
 
- function showReward() {
+function showReward() {
     const photoIndex = (Math.floor(score / 10) - 1) % catPhotos.length;
-    const fileName = catPhotos[photoIndex];
+    const baseNum = photoIndex + 1; // 1〜99の番号
     const imgElement = document.getElementById('catImg');
     const errorMsg = document.getElementById('imgErrorMsg');
     
     errorMsg.style.display = 'none';
     imgElement.style.display = 'block';
 
+    // 最初は大文字の .JPG で読み込みを試す
+    let fileName = `cat (${baseNum}).JPG`;
+
+    // .JPG で読み込めなかった場合、自動的に小文字の .jpg に切り替えて再試行する
     imgElement.onerror = function() {
-      imgElement.style.display = 'none';
-      errorMsg.style.display = 'block';
-      errorMsg.innerText = `「${fileName}」の画像が見つかりません。ファイル名と保存場所を確認してください。`;
+      if (fileName.endsWith('.JPG')) {
+        fileName = `cat (${baseNum}).jpg`;
+        imgElement.src = encodeURIComponent(fileName);
+      } else {
+        // どちらでもダメだった場合のみエラー表示
+        imgElement.style.display = 'none';
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = `「cat (${baseNum})」の写真が見つかりません。`;
+      }
     };
 
-    // GitHub Pages用に、ファイル名内のスペースやカッコを自動で正しいURL形式に変換して読み込む
     imgElement.src = encodeURIComponent(fileName);
     document.getElementById('rewardModal').style.display = 'flex';
   }
