@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>さくらんぼ計算（数をわけよう）</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #fffaf0;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .score-badge {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background-color: #ffeb3b;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: bold;
+      color: #f57f17;
+      font-size: 14px;
+    }
+    h1 {
+      color: #ff5252;
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+    .top-number {
+      font-size: 56px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 10px 0;
+    }
+    .instruction {
+      font-size: 16px;
+      font-weight: bold;
+      color: #ff7043;
+      margin-bottom: 10px;
+    }
+    .cherry-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin: 20px 0;
+    }
+    .cherry-box {
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .known-box {
+      background-color: #e3f2fd;
+      border: 3px solid #2196f3;
+      color: #1565c0;
+    }
+    .unknown-box {
+      background-color: #ffebee;
+      border: 3px dashed #ff5252;
+      color: #c62828;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+    button {
+      background-color: #ff7043;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 0;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px #d84315;
+    }
+    button:active {
+      box-shadow: 0 0 #d84315;
+      transform: translateY(4px);
+    }
+    .message {
+      font-size: 20px;
+      font-weight: bold;
+      min-height: 30px;
+      margin-top: 10px;
+    }
+    .next-btn {
+      background-color: #66bb6a;
+      box-shadow: 0 4px #388e3c;
+      width: 100%;
+      margin-top: 15px;
+      display: none;
+    }
+
+    /* ご褒美ポップアップ画面 */
+    .reward-modal {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 20px;
+      box-sizing: border-box;
+      padding: 20px;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    .reward-modal img {
+      max-width: 90%;
+      max-height: 220px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin: 15px 0;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="score-badge">せいかい: <span id="score">0</span> もん</div>
+  <h1>🍒 さくらんぼ計算 🍒</h1>
+  <p class="instruction">「いくつ」と「いくつ」にわけられるかな？</p>
+  
+  <div class="top-number" id="topNum">8</div>
+
+  <div class="cherry-container">
+    <div class="cherry-box known-box" id="knownBox">3</div>
+    <div class="cherry-box unknown-box" id="unknownBox">?</div>
+  </div>
+
+  <p id="subGuide">「?」に入るすうじをえらんでね！</p>
+
+  <div class="options" id="options"></div>
+
+  <div class="message" id="message"></div>
+  <button class="next-btn" id="nextBtn" onclick="generateQuestion()">つぎの問題へ ➔</button>
+
+  <!-- ご褒美画面 -->
+  <div class="reward-modal" id="rewardModal">
+    <h2 style="color: #ff5252; margin: 0;">🎉 10もん せいかい！ 🎉</h2>
+    <p style="font-weight: bold; margin: 5px 0;">ごほうびの ねこちゃん写真だよ！</p>
+    <img id="catImg" src="" alt="ねこちゃん写真">
+    <p id="imgErrorMsg" style="color: #c62828; font-size: 12px; margin: 0; display: none;"></p>
+    <button style="background-color: #42a5f5; box-shadow: 0 4px #1e88e5; width: 80%; margin-top: 10px;" onclick="closeReward()">つづけて あそうぶ！</button>
+  </div>
+</div>
+
+<script>
+  let topNum = 0;
+  let knownNum = 0;
+  let correctNum = 0;
+  let score = 0;
+
+  // 1〜99までの写真ファイル名（cat (1).jpg 〜 cat (99).jpg）を自動作成
+  const catPhotos = [];
+  for (let i = 1; i <= 99; i++) {
+    catPhotos.push(`cat (${i}).jpg`);
+  }
+
+  function generateQuestion() {
+    document.getElementById('message').innerText = '';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('unknownBox').innerText = '?';
+    document.getElementById('subGuide').innerText = '「?」に入るすうじをえらんでね！';
+
+    topNum = Math.floor(Math.random() * 9) + 2;
+    knownNum = Math.floor(Math.random() * (topNum - 1)) + 1;
+    correctNum = topNum - knownNum;
+
+    document.getElementById('topNum').innerText = topNum;
+    document.getElementById('knownBox').innerText = knownNum;
+
+    renderButtons();
+  }
+
+  function renderButtons() {
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    
+    for (let i = 1; i <= 9; i++) {
+      const btn = document.createElement('button');
+      btn.innerText = i;
+      btn.onclick = () => checkAnswer(i);
+      optionsDiv.appendChild(btn);
+    }
+  }
+
+  function checkAnswer(selected) {
+    const message = document.getElementById('message');
+    
+    if (selected === correctNum) {
+      score++;
+      document.getElementById('score').innerText = score;
+      document.getElementById('unknownBox').innerText = selected;
+      message.style.color = '#2e7d32';
+      message.innerText = `だいせいかい！🎉`;
+      document.getElementById('options').innerHTML = '';
+      
+      // 10問正解ごとにご褒美表示
+      if (score > 0 && score % 10 === 0) {
+        showReward();
+      } else {
+        document.getElementById('nextBtn').style.display = 'block';
+      }
+    } else {
+      message.style.color = '#c62828';
+      message.innerText = `ざんねん！ ${topNum} になるように考えてみよう！`;
+    }
+  }
+
+  function showReward() {
+    const photoIndex = (Math.floor(score / 10) - 1) % catPhotos.length;
+    const fileName = catPhotos[photoIndex];
+    const imgElement = document.getElementById('catImg');
+    const errorMsg = document.getElementById('imgErrorMsg');
+    
+    errorMsg.style.display = 'none';
+    imgElement.style.display = 'block';
+
+    imgElement.onerror = function() {
+      imgElement.style.display = 'none';
+      errorMsg.style.display = 'block';
+      errorMsg.innerText = `「${fileName}」の画像が見つかりません。ファイル名と保存場所を確認してください。`;
+    };
+
+    imgElement.src = fileName;
+    document.getElementById('rewardModal').style.display = 'flex';
+  }
+
+  function closeReward() {
+    document.getElementById('rewardModal').style.display = 'none';
+    generateQuestion();
+  }
+
+  generateQuestion();
+</script>
+
+</body>
+</html>
