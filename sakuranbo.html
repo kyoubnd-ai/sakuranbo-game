@@ -230,7 +230,7 @@
     }
   }
 
-  function showReward() {
+ function showReward() {
     const photoIndex = (Math.floor(score / 10) - 1) % catPhotos.length;
     const fileName = catPhotos[photoIndex];
     const imgElement = document.getElementById('catImg');
@@ -245,10 +245,10 @@
       errorMsg.innerText = `「${fileName}」の画像が見つかりません。ファイル名と保存場所を確認してください。`;
     };
 
-    imgElement.src = fileName;
+    // GitHub Pages用に、ファイル名内のスペースやカッコを自動で正しいURL形式に変換して読み込む
+    imgElement.src = encodeURIComponent(fileName);
     document.getElementById('rewardModal').style.display = 'flex';
   }
-
   function closeReward() {
     document.getElementById('rewardModal').style.display = 'none';
     generateQuestion();
