@@ -159,7 +159,7 @@
 
   <!-- ご褒美画面 -->
   <div class="reward-modal" id="rewardModal">
-    <h2 style="color: #ff5252; margin: 0;">🎉 10もん せいかい！ 🎉</h2>
+    <h2 style="color: #ff5252; margin: 0;">🎉 5もん せいかい！ 🎉</h2>
     <p style="font-weight: bold; margin: 5px 0;">ごほうびの ねこちゃん写真だよ！</p>
     <img id="catImg" src="" alt="ねこちゃん写真">
     <p id="imgErrorMsg" style="color: #c62828; font-size: 12px; margin: 0; display: none;"></p>
@@ -172,6 +172,9 @@
   let knownNum = 0;
   let correctNum = 0;
   let score = 0;
+
+  // 前回の保存データ（写真の進行度）を読み込み
+  let photoIndex = parseInt(localStorage.getItem('sakuranbo_photo_index')) || 0;
 
   function generateQuestion() {
     document.getElementById('message').innerText = '';
@@ -212,8 +215,8 @@
       message.innerText = `だいせいかい！🎉`;
       document.getElementById('options').innerHTML = '';
       
-      // 10問正解ごとにご褒美表示
-      if (score > 0 && score % 10 === 0) {
+      // 5問正解ごとにご褒美表示
+      if (score > 0 && score % 5 === 0) {
         showReward();
       } else {
         document.getElementById('nextBtn').style.display = 'block';
@@ -225,8 +228,13 @@
   }
 
   function showReward() {
-    // 10問ごとに写真番号を計算（1〜99）
-    const photoNum = ((Math.floor(score / 10) - 1) % 99) + 1;
+    // 次の写真番号（1〜99）を取得
+    const photoNum = (photoIndex % 99) + 1;
+    
+    // 次回の準備のためにカウントを進めて保存
+    photoIndex++;
+    localStorage.setItem('sakuranbo_photo_index', photoIndex);
+
     const imgElement = document.getElementById('catImg');
     const errorMsg = document.getElementById('imgErrorMsg');
     
@@ -236,13 +244,12 @@
     // 最初に大文字 .JPG で読み込みを試す
     let fileName = `cat (${photoNum}).JPG`;
 
-    // もし大文字で読み込めなければ、自動的に小文字 .jpg に切り替えて再読み込みする
+    // 大文字で読み込めなければ、自動的に小文字 .jpg に切り替える
     imgElement.onerror = function() {
       if (fileName.endsWith('.JPG')) {
         fileName = `cat (${photoNum}).jpg`;
         imgElement.src = encodeURIComponent(fileName);
       } else {
-        // 両方ダメだった場合のみエラーを表示
         imgElement.style.display = 'none';
         errorMsg.style.display = 'block';
         errorMsg.innerText = `「cat (${photoNum})」の写真が見つかりません。`;
