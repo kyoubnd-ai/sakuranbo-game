@@ -173,12 +173,6 @@
   let correctNum = 0;
   let score = 0;
 
-  // 1〜99までの写真ファイル名（cat (1).JPG 〜 cat (99).JPG）を自動作成
-  const catPhotos = [];
-  for (let i = 1; i <= 99; i++) {
-    catPhotos.push(`cat (${i}).JPG`);
-  }
-
   function generateQuestion() {
     document.getElementById('message').innerText = '';
     document.getElementById('nextBtn').style.display = 'none';
@@ -230,34 +224,35 @@
     }
   }
 
-function showReward() {
-    const photoIndex = (Math.floor(score / 10) - 1) % catPhotos.length;
-    const baseNum = photoIndex + 1; // 1〜99の番号
+  function showReward() {
+    // 10問ごとに写真番号を計算（1〜99）
+    const photoNum = ((Math.floor(score / 10) - 1) % 99) + 1;
     const imgElement = document.getElementById('catImg');
     const errorMsg = document.getElementById('imgErrorMsg');
     
     errorMsg.style.display = 'none';
     imgElement.style.display = 'block';
 
-    // 最初は大文字の .JPG で読み込みを試す
-    let fileName = `cat (${baseNum}).JPG`;
+    // 最初に大文字 .JPG で読み込みを試す
+    let fileName = `cat (${photoNum}).JPG`;
 
-    // .JPG で読み込めなかった場合、自動的に小文字の .jpg に切り替えて再試行する
+    // もし大文字で読み込めなければ、自動的に小文字 .jpg に切り替えて再読み込みする
     imgElement.onerror = function() {
       if (fileName.endsWith('.JPG')) {
-        fileName = `cat (${baseNum}).jpg`;
+        fileName = `cat (${photoNum}).jpg`;
         imgElement.src = encodeURIComponent(fileName);
       } else {
-        // どちらでもダメだった場合のみエラー表示
+        // 両方ダメだった場合のみエラーを表示
         imgElement.style.display = 'none';
         errorMsg.style.display = 'block';
-        errorMsg.innerText = `「cat (${baseNum})」の写真が見つかりません。`;
+        errorMsg.innerText = `「cat (${photoNum})」の写真が見つかりません。`;
       }
     };
 
     imgElement.src = encodeURIComponent(fileName);
     document.getElementById('rewardModal').style.display = 'flex';
   }
+
   function closeReward() {
     document.getElementById('rewardModal').style.display = 'none';
     generateQuestion();
