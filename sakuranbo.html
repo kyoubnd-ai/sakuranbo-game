@@ -159,7 +159,7 @@
 
   <!-- ご褒美画面 -->
   <div class="reward-modal" id="rewardModal">
-    <h2 style="color: #ff5252; margin: 0;">🎉 5もん せいかい！ 🎉</h2>
+    <h2 style="color: #ff5252; margin: 0;">🎉 2もん せいかい！ 🎉</h2>
     <p style="font-weight: bold; margin: 5px 0;">ごほうびの ねこちゃん写真だよ！</p>
     <img id="catImg" src="" alt="ねこちゃん写真">
     <p id="imgErrorMsg" style="color: #c62828; font-size: 12px; margin: 0; display: none;"></p>
@@ -172,9 +172,6 @@
   let knownNum = 0;
   let correctNum = 0;
   let score = 0;
-
-  // 前回の保存データ（写真の進行度）を読み込み
-  let photoIndex = parseInt(localStorage.getItem('sakuranbo_photo_index')) || 0;
 
   function generateQuestion() {
     document.getElementById('message').innerText = '';
@@ -215,8 +212,8 @@
       message.innerText = `だいせいかい！🎉`;
       document.getElementById('options').innerHTML = '';
       
-      // 5問正解ごとにご褒美表示
-      if (score > 0 && score % 5 === 0) {
+      // 2問正解にご褒美表示
+      if (score > 0 && score % 2 === 0) {
         showReward();
       } else {
         document.getElementById('nextBtn').style.display = 'block';
@@ -228,12 +225,8 @@
   }
 
   function showReward() {
-    // 次の写真番号（1〜99）を取得
-    const photoNum = (photoIndex % 99) + 1;
-    
-    // 次回の準備のためにカウントを進めて保存
-    photoIndex++;
-    localStorage.setItem('sakuranbo_photo_index', photoIndex);
+    // 1〜99の中からランダムで写真番号を選択
+    const photoNum = Math.floor(Math.random() * 99) + 1;
 
     const imgElement = document.getElementById('catImg');
     const errorMsg = document.getElementById('imgErrorMsg');
